@@ -103,6 +103,16 @@ Claude Code                          Clawd on Desk
   的差异主要在动效上，静态帧看不太出来</sub>
 </p>
 
+<p align="center">
+  <img src="assets/pet-sweeping.gif" alt="桌宠在压缩上下文时扫地" width="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/pet-error.gif" alt="工具失败后桌宠叉叉眼冒烟" width="150">
+</p>
+<p align="center">
+  <sub>左：<code>sweeping</code>，正在压缩上下文。右：<code>error</code>，工具刚失败。<br>
+  <code>error</code> 是瞬时状态——约一秒后自动回落到 <code>working</code>，得盯着才看得到</sub>
+</p>
+
 有个细节值得一提：Claude Code 启动子 agent 时，某些版本只发
 `PreToolUse(Task)` 而不发 `SubagentStart`。Clawd 对此做了兼容，
 识别到 `Task` / `Agent` 工具名就切 `juggling`——所以并行任务的状态不会漏。

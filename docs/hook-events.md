@@ -15,7 +15,7 @@ Claude Code 在生命周期的关键节点会触发 hook。这套配置把其中
 | `UserPromptSubmit` | 你按下回车提交 | 从待机切到「在干活」 |
 | `PreToolUse` | 每次调用工具前 | 工具活动的开始信号 |
 | `PostToolUse` | 工具成功返回 | 工具活动的结束信号 |
-| `PostToolUseFailure` | 工具报错 | 出错状态——不用盯屏幕也知道翻车了 |
+| `PostToolUseFailure` | 工具报错 | 出错状态——不用盯屏幕也知道翻车了。**瞬时**，约一秒后自动回落 |
 | `Notification` | Claude 需要你注意 | 冒泡提醒；本仓库的通知脚本也挂在这里 |
 | `Elicitation` | Claude 反过来问你问题 | 提示你去回答 |
 | `Stop` | 主回合正常结束 | 完成状态 + 可选的任务栏闪烁和提示音 |

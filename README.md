@@ -113,6 +113,18 @@ Taken from Clawd's `clawd-hook.js` (`EVENT_TO_STATE`) — not guesswork:
   and are hard to tell apart in a still frame</sub>
 </p>
 
+<p align="center">
+  <img src="assets/pet-sweeping.gif" alt="The pet sweeping while context is compacted" width="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/pet-error.gif" alt="The pet collapsed with X eyes and smoke after a tool failure" width="150">
+</p>
+<p align="center">
+  <sub>Left: <code>sweeping</code>, during context compaction. Right: <code>error</code>, after a tool
+  failure.<br>
+  <code>error</code> is transient — it reverts to <code>working</code> after roughly a second,
+  so you have to be looking to catch it</sub>
+</p>
+
 One detail worth knowing: on some builds Claude Code reports subagent launches
 only as `PreToolUse(Task)` without a native `SubagentStart`. Clawd handles this
 by switching to `juggling` on the `Task` / `Agent` tool name — so parallel work
