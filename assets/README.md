@@ -3,9 +3,9 @@
 | 文件 | 用途 |
 |---|---|
 | `elicitation-with-pet.png` | 中文 README 首图：追问卡片 + 桌宠（等待输入姿态） |
-| `elicitation-with-pet-en.png` | 英文 README 正文图，同上的英文版 |
+| `elicitation-with-pet-en.png` | 英文 README 首图，同上的英文版 |
 | `permission-bubble.png` | 权限卡片，含破坏性操作警告 |
-| `permission-bubble-en.png` | 英文 README 首图，同上 |
+| `permission-bubble-en.png` | 英文 README 正文图，同上 |
 
 全部用单窗口捕获（`screencapture -l <windowID>`）拍摄，只含卡片与桌宠本身，
 背景透明、无桌面内容。追问卡片那两张是把两个窗口分别截图后裁掉透明边再上下

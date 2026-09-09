@@ -5,10 +5,11 @@
 [中文](./README.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/permission-bubble-en.png" alt="Clawd's permission card with a destructive-action warning" width="340">
+  <img src="assets/elicitation-with-pet-en.png" alt="Clawd's follow-up question card above the pet" width="380">
 </p>
 <p align="center">
-  <sub>The card that pops up when Claude Code wants to run <code>rm -rf</code>. <code>Cmd+Shift+Y</code> to allow, <code>Cmd+Shift+N</code> to deny — <b>without switching windows</b></sub>
+  <sub>When Claude Code asks you to pick between options, the card lands on the desktop — and the
+  pet switches to its lightbulb "needs input" pose</sub>
 </p>
 
 ## What this is
@@ -44,11 +45,10 @@ This config cuts those three minutes to zero:
   which step blew up
 
 <p align="center">
-  <img src="assets/elicitation-with-pet-en.png" alt="Clawd's follow-up question card above the pet" width="340">
+  <img src="assets/permission-bubble-en.png" alt="Permission card with a destructive-action warning" width="300">
 </p>
 <p align="center">
-  <sub>When Claude Code asks you to pick between options, the card lands on the desktop and the
-  pet switches to its lightbulb "needs input" pose</sub>
+  <sub>When the command contains <code>rm -rf</code>, the card raises a <b>Destructive action</b> warning on its own</sub>
 </p>
 
 ## Quick start
