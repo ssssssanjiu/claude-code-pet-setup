@@ -23,9 +23,48 @@
 | 设置 | 我的值 | 说明 |
 |---|---|---|
 | `permissionBubbleAutoCloseSeconds` | `0` | **0 = 永不自动关闭**。权限卡片自己消失是最坑的——你以为拒绝了，其实是超时回落 |
-| `notificationBubbleAutoCloseSeconds` | `6` | 普通通知 6 秒够看清了 |
+| `notificationBubbleAutoCloseSeconds` | `6` | 普通通知 6 秒够看清。**别设 0** —— 见下方说明 |
 | `sessionStaleMs` | `600000`（10 分钟） | 超过这个时间没信号就标记为陈旧 |
 | `workingStaleMs` | `300000`（5 分钟） | 「工作中」状态卡死超过 5 分钟基本就是真卡了 |
+
+## 两个反直觉的点
+
+这两条是翻 Clawd 源码翻出来的，踩过才知道。
+
+### `0` 在两种气泡上含义相反
+
+```js
+// bubble-policy.js
+if (kind === "permission") {
+  return { enabled, autoCloseMs: seconds > 0 ? seconds * 1000 : 0 };
+  //  0 = 永不自动关闭（气泡照常显示）
+}
+if (kind === "notification") {
+  return { enabled: seconds > 0, ... };
+  //  0 = enabled 为 false，气泡根本不显示
+}
+```
+
+所以 `permissionBubbleAutoCloseSeconds: 0` 是「别自动关掉我的权限卡片」，
+而 `notificationBubbleAutoCloseSeconds: 0` 是「关闭通知气泡功能」。
+想要通知气泡久留，应该往大了设（上限 3600），而不是设 0。
+
+### Claude Code 不会出「被动通知」气泡
+
+Clawd 里有一类 passive notify 气泡，源码的注释写得很清楚：
+
+> Shared predicate for "passive" notification bubbles — Codex/Kimi cues that
+> carry no HTTP decision channel …
+
+它是给 Codex / Kimi 这类「只通知、不阻塞」的 agent 用的。Claude Code 走的是
+**带决策通道**的路径，所以你在屏幕上看到的卡片只有两种：
+
+- **权限卡片** —— `PermissionRequest` 触发，Allow / Deny
+- **追问卡片** —— `Elicitation` 触发，就是 Claude 让你在几个选项里挑一个
+
+想让 Claude Code 的状态变化也弹系统横幅，用本仓库的
+`hooks/notify-input-needed.py`（挂在 `Notification` 事件上）——
+这正是它存在的理由。
 
 ## 快捷键
 
