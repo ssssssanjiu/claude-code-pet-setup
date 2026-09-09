@@ -1,293 +1,330 @@
 # clawd-conduit
 
-> 让桌面宠物真正「懂」你的 Claude Code 会话——15 个 hook 事件的完整接线方案。
+> Wire a desktop pet into what your Claude Code session is *actually* doing — all 15 hook events.
 
-[English](./README.en.md) · macOS · MIT
-
-<p align="center">
-  <img src="assets/elicitation-with-pet.png" alt="中文追问卡片与桌宠" width="330">
-  <img src="assets/elicitation-with-pet-en.png" alt="英文追问卡片与桌宠" width="330">
-</p>
-<p align="center">
-  <sub>Claude Code 让你在几个方案里挑一个时，卡片直接弹在桌面上——桌宠同时切换成举灯泡的「等待输入」姿态。<br>
-  界面语言跟随 Clawd 设置，中英文皆可</sub>
-</p>
-
-## 这是什么
-
-[Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk) 是一只会盯着
-AI 编程 agent 的桌面宠物。它自带 Claude Code 集成，装完开箱可用。
-
-这个仓库是**在它之上的一层完整接线**：把 Claude Code 生命周期里的 15 个 hook
-事件一次性全部接通，配上一个自写的系统通知脚本、一套幂等的安装/卸载工具，
-以及三个月日常使用后沉淀下来的参数取舍。
-
-差别在信息粒度：接得少时，宠物大致知道你「在忙 / 不忙」；接满 15 个之后，
-它区分得出你是在**调工具**、**工具失败了**、**子 agent 在并行**、
-**上下文正在压缩**，还是**卡在一个确认上等你点头**。
-
-**最值钱的是最后一个。**
-
-## 它真正解决的问题
-
-Claude Code 干长任务时，你会离开终端——去看文档、回消息、倒杯水。
-然后回来发现它在三分钟前就停下了，等你点一个「允许」。
-
-这套配置把那三分钟压成零：
-
-- 权限请求直接弹成桌面卡片，`Cmd+Shift+Y` 允许、`Cmd+Shift+N` 拒绝，**不用切窗口**
-- 卡片**永不自动消失**（`permissionBubbleAutoCloseSeconds: 0`）——超时自动关闭是最坑的默认值，
-  你以为拒绝了，其实只是回落到了终端提示
-- 任务完成闪 Dock + 提示音，人在别的窗口也接得住
-- 工具失败当场变脸，不用回头翻 scrollback 找哪一步炸了
+[中文](./README.zh-CN.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/permission-bubble.png" alt="带破坏性操作警告的权限卡片" width="300">
+  <img src="assets/elicitation-with-pet-en.png" alt="Follow-up question card above the pet, in English" width="330">
+  <img src="assets/elicitation-with-pet.png" alt="Follow-up question card above the pet, in Chinese" width="330">
 </p>
 <p align="center">
-  <sub>命令里有 <code>rm -rf</code> 时，卡片会自己亮出 <b>Destructive action</b> 警告条</sub>
+  <sub>When Claude Code asks you to pick between options, the card lands on the desktop — and the
+  pet switches to its lightbulb "needs input" pose.<br>
+  The card follows Clawd's own language setting; English and Chinese both shown</sub>
 </p>
 
-## 工作原理
+## What this is
 
-Claude Code 在会话生命周期的关键节点会触发 hook。这套配置把其中 **14 个**用
-`command` 类型转发给 Clawd 随附的 `clawd-hook.js`，另外 **1 个**（权限请求）
-走 `http` 类型直连 Clawd 的本地端口。
+[Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk) is a desktop pet
+that watches AI coding agents. It ships with Claude Code integration and works
+out of the box.
+
+This repo is **a complete wiring layer on top of it**: all 15 Claude Code
+lifecycle hook events, plus a notification script, an idempotent
+install/uninstall toolchain, and the parameter trade-offs I settled on after
+three months of daily use.
+
+The difference is granularity. With fewer events the pet roughly knows whether
+you're *busy or idle*. With all 15 it can tell you're **running a tool**, that a
+**tool just failed**, that **subagents are running in parallel**, that **context
+is being compacted** — or that it's **blocked on a confirmation waiting for you**.
+
+**That last one is the whole point.**
+
+## The problem it actually solves
+
+During long runs you leave the terminal — docs, messages, coffee. You come back
+and find it stopped three minutes ago waiting for you to click "allow."
+
+This config cuts those three minutes to zero:
+
+- Permission requests surface as a desktop card: `Cmd+Shift+Y` to allow,
+  `Cmd+Shift+N` to deny — **no window switching**
+- The card **never auto-dismisses** (`permissionBubbleAutoCloseSeconds: 0`).
+  Auto-dismiss is the worst default here: you think you denied it, but it just
+  timed out and fell back to the terminal prompt
+- Dock flash + sound on completion, so you catch it from another app
+- Tool failures change the pet's state immediately — no scrolling back to find
+  which step blew up
+
+<p align="center">
+  <img src="assets/permission-bubble-en.png" alt="Permission card with a destructive-action warning" width="300">
+</p>
+<p align="center">
+  <sub>When the command contains <code>rm -rf</code>, the card raises a <b>Destructive action</b> warning on its own</sub>
+</p>
+
+## How it works
+
+Claude Code fires hooks at key points in a session's lifecycle. This config
+forwards **14 of them** as `command` hooks to Clawd's bundled `clawd-hook.js`,
+and routes **one more** — the permission request — as an `http` hook straight to
+Clawd's local port.
 
 ```
 Claude Code                          Clawd on Desk
     │
     ├─ SessionStart ─┐
     ├─ PreToolUse  ──┤  command hook
-    ├─ Stop        ──┼─→ clawd-hook.js ──→ POST 127.0.0.1:23333/state ──→ 改变宠物状态
-    ├─ …（共 14 个）─┘        (async, 5s 超时，不阻塞会话)
+    ├─ Stop        ──┼─→ clawd-hook.js ──→ POST 127.0.0.1:23333/state ──→ pet changes state
+    ├─ … (14 total) ─┘        (async, 5s timeout, never blocks the session)
     │
     └─ PermissionRequest ─→ HTTP hook ──→ POST 127.0.0.1:23333/permission
-                                              (阻塞，600s 超时)
+                                              (blocking, 600s timeout)
                                                     │
-                                          弹出卡片 ─┴─→ 你点 Allow / Deny
-                                                         └─→ 决定回传，会话继续
+                                          card pops ┴─→ you click Allow / Deny
+                                                         └─→ decision returns, session continues
 ```
 
-两条通道的区别是**要不要等你**。状态事件是单向广播，发完就走；
-权限请求要停下来等一个人类决定，所以它是唯一阻塞的一条。
+The two channels differ in **whether they wait for you**. State events are
+one-way broadcasts — fire and forget. A permission request has to stop and wait
+for a human decision, which is why it is the only blocking one.
 
-### 事件与宠物状态的对应
+### Events and pet states
 
-下表取自 Clawd 的 `clawd-hook.js`（`EVENT_TO_STATE`），不是猜的：
+Taken from Clawd's `clawd-hook.js` (`EVENT_TO_STATE`) — not guesswork:
 
-| 事件 | 宠物状态 | 触发时机 |
+| Event | Pet state | When it fires |
 |---|---|---|
-| `SessionStart` | `idle` | 会话开始。本配置额外挂了 `open -ga` 顺手拉起 app |
-| `UserPromptSubmit` | `thinking` | 你按下回车提交 |
-| `PreToolUse` | `working` | 每次调用工具前 |
-| `PostToolUse` | `working` | 工具成功返回 |
-| `PostToolUseFailure` | `error` | 工具报错 |
-| `SubagentStart` | `juggling` | 子 agent 启动——字面意义上开始「杂耍」 |
-| `SubagentStop` | `working` | 子 agent 结束 |
-| `PreCompact` | `sweeping` | 上下文压缩前，宠物开始「打扫」 |
-| `PostCompact` | `thinking` | 压缩完成。注意**不是** `attention`——压缩不等于任务完成 |
-| `Stop` | `attention` | 主回合正常结束，来叫你 |
-| `StopFailure` | `error` | 回合异常终止 |
-| `Notification` | `notification` | Claude 需要你注意 |
-| `Elicitation` | `notification` | Claude 反过来问你问题（就是首图那张卡片） |
-| `SessionEnd` | `sleeping` | 会话结束，宠物去睡 |
-| `PermissionRequest` | —— | 走 HTTP 通道，直接弹卡片 |
+| `SessionStart` | `idle` | Session begins. This config also attaches `open -ga` to launch the app |
+| `UserPromptSubmit` | `thinking` | You hit enter |
+| `PreToolUse` | `working` | Before every tool call |
+| `PostToolUse` | `working` | Tool returned successfully |
+| `PostToolUseFailure` | `error` | Tool errored |
+| `SubagentStart` | `juggling` | A subagent starts — literally starts juggling |
+| `SubagentStop` | `working` | Subagent finished |
+| `PreCompact` | `sweeping` | Before context compaction, the pet starts sweeping |
+| `PostCompact` | `thinking` | Compaction done. Deliberately **not** `attention` — compacting isn't completion |
+| `Stop` | `attention` | Turn finished normally; it comes to get you |
+| `StopFailure` | `error` | Turn ended abnormally |
+| `Notification` | `notification` | Claude needs your attention |
+| `Elicitation` | `notification` | Claude asks *you* a question (the card in the hero shot) |
+| `SessionEnd` | `sleeping` | Session over, pet goes to sleep |
+| `PermissionRequest` | — | Goes through the HTTP channel and pops a card directly |
 
-有个细节值得一提：Claude Code 启动子 agent 时，某些版本只发
-`PreToolUse(Task)` 而不发 `SubagentStart`。Clawd 对此做了兼容，
-识别到 `Task` / `Agent` 工具名就切 `juggling`——所以并行任务的状态不会漏。
+<p align="center">
+  <img src="assets/pet-states.png" alt="Four pet states: idle, sweeping, attention, error" width="620">
+</p>
+<p align="center">
+  <sub>The four most distinguishable states. <code>sweeping</code> means context is being compacted,
+  <code>attention</code> means the turn ended and it came to get you, <code>error</code> literally smokes.<br>
+  The rest (<code>thinking</code>/<code>working</code>/<code>juggling</code>) differ mostly in motion
+  and are hard to tell apart in a still frame</sub>
+</p>
 
-### 为什么模板里写绝对路径
+One detail worth knowing: on some builds Claude Code reports subagent launches
+only as `PreToolUse(Task)` without a native `SubagentStart`. Clawd handles this
+by switching to `juggling` on the `Task` / `Agent` tool name — so parallel work
+never goes unreported.
+
+### Why the template uses absolute paths
 
 ```json
 "command": "\"/opt/homebrew/bin/node\" \"/Applications/Clawd on Desk.app/…/clawd-hook.js\" Stop"
 ```
 
-hook 由 Claude Code 在**非登录 shell** 里执行，`PATH` 可能不含 Homebrew 目录。
-写成 `node` 会直接 command not found，而且因为配了 `async: true`，
-你连报错都看不到——表现就是宠物安静地不动了。`install.sh` 会自动探测并填好路径。
+Hooks run in a **non-login shell**, where `PATH` may not include Homebrew. A bare
+`node` becomes command-not-found — and because these are `async: true`, you never
+see the error. The symptom is just a pet that quietly stops moving. `install.sh`
+detects and fills both paths for you.
 
-路径里有空格（`Clawd on Desk.app`），所以命令里每一段都必须带引号。
+The path contains a space (`Clawd on Desk.app`), so every segment must be quoted.
 
-## 快速开始
+## Quick start
 
 ```bash
-# 1. 先装 Clawd on Desk 本体（本仓库不含它，也不重新分发它）
+# 1. Install Clawd on Desk itself (not bundled or redistributed here)
 #    https://github.com/rullerzhou-afk/clawd-on-desk/releases
 
-# 2. 套上这份配置
+# 2. Apply this config
 git clone https://github.com/ssssssanjiu/clawd-conduit.git
 cd clawd-conduit
 bash install.sh
 ```
 
-新开一个 Claude Code 会话即可生效。
+Start a new Claude Code session to pick it up.
 
-### install.sh 做了什么
+### What install.sh does
 
-1. **定位 Clawd** —— 依次查 `/Applications`、`~/Applications`，
-   再兜底用 `mdfind` 按 bundle id `com.clawd.on-desk` 搜。找不到会明确报错并给下载链接。
-2. **定位 node** —— 依次查 `/opt/homebrew/bin/node`、`/usr/local/bin/node`、`command -v node`。
-3. **备份** —— 把现有 `settings.json` 复制成 `settings.json.bak.<时间戳>`。
-4. **合并 hook 配置** —— 用占位符模板填入真实路径后写入。
-   **逐事件保留你原有的其他 hook**，只覆盖本仓库自己写过的条目。
-5. **安装通知脚本** —— 复制到 `~/.claude/hooks/` 并挂到 `Notification` 事件（可跳过）。
-6. **校验** —— 用 `python3 -c "json.load(...)"` 确认写出来的 JSON 语法没坏。
+1. **Locate Clawd** — checks `/Applications`, then `~/Applications`, then falls
+   back to `mdfind` on bundle id `com.clawd.on-desk`. Fails loudly with a
+   download link if it can't find it.
+2. **Locate node** — checks `/opt/homebrew/bin/node`, `/usr/local/bin/node`,
+   then `command -v node`.
+3. **Back up** — copies your `settings.json` to `settings.json.bak.<timestamp>`.
+4. **Merge hook config** — fills the placeholder template with real paths.
+   **Preserves your other hooks per event**, replacing only entries this repo
+   wrote itself.
+5. **Install the notification script** — copies it to `~/.claude/hooks/` and
+   attaches it to `Notification` (skippable).
+6. **Validate** — runs `python3 -c "json.load(...)"` to confirm the JSON it wrote
+   is still parseable.
 
-**可以重复运行。** 第二次执行是覆盖而不是叠加，`clawd-hook.js` 的出现次数恒为 14。
+**Safe to re-run.** A second run replaces rather than appends; the occurrence
+count of `clawd-hook.js` stays at exactly 14.
 
-### 验证是否生效
+### Verify it took
 
 ```bash
-# 1. 15 个事件都挂上了吗
+# 1. Are all 15 events wired?
 python3 -c "import json;h=json.load(open('$HOME/.claude/settings.json'))['hooks'];\
-print(len([k for k,v in h.items() if 'clawd' in json.dumps(v).lower() or '23333' in json.dumps(v)]),'个事件')"
+print(len([k for k,v in h.items() if 'clawd' in json.dumps(v).lower() or '23333' in json.dumps(v)]),'events')"
 
-# 2. Clawd 的本地服务在监听吗
+# 2. Is Clawd's local service listening?
 lsof -nP -iTCP:23333 -sTCP:LISTEN
 
-# 3. hook 脚本路径是真的吗
+# 3. Does the hook script path actually exist?
 ls -l "/Applications/Clawd on Desk.app/Contents/Resources/app.asar.unpacked/hooks/clawd-hook.js"
 ```
 
-第 1 条应输出 `15 个事件`，第 2 条应看到 `Clawd on Desk` 进程。
-都对上之后，新开一个会话随便发一句话，宠物应当从 `idle` 变 `thinking`。
+The first should print `15 events`; the second should show a `Clawd on Desk`
+process. Once both check out, start a session and send any message — the pet
+should go from `idle` to `thinking`.
 
-## 常见问题与排查
+## Troubleshooting
 
 <details>
-<summary><b>宠物完全没反应</b></summary>
+<summary><b>The pet does nothing at all</b></summary>
 
-按顺序查三件事：
+Check three things, in order:
 
-1. **node 路径错了。** 这是最常见的原因。hook 是 `async` 的，失败不会有任何提示。
-   直接手动跑一次看报错：
+1. **Wrong node path.** By far the most common cause. Hooks are `async`, so
+   failures are completely silent. Run one by hand to see the error:
    ```bash
    echo '{"session_id":"t","hook_event_name":"Stop"}' | \
      /opt/homebrew/bin/node "/Applications/Clawd on Desk.app/Contents/Resources/app.asar.unpacked/hooks/clawd-hook.js" Stop
    ```
-2. **Clawd 没在跑。** `pgrep -f "Clawd on Desk"` 应有输出。
-3. **配置没重新加载。** hook 在会话启动时读取，改完要**新开会话**，
-   当前这个不会热更新。
+2. **Clawd isn't running.** `pgrep -f "Clawd on Desk"` should print a PID.
+3. **Config wasn't reloaded.** Hooks are read at session start — you need a
+   **new session**; the current one won't hot-reload.
 </details>
 
 <details>
-<summary><b>权限卡片不弹</b></summary>
+<summary><b>Permission cards don't appear</b></summary>
 
-- Clawd 设置里 `permissionBubblesEnabled` 要为 `true`
-- `hideBubbles` 要为 `false`
-- 端口 23333 要在监听（见上面验证第 2 条）
-- 如果你在用 Claude Code 的 `--dangerously-skip-permissions` 或已把该操作加进
-  allowlist，压根不会产生权限请求——这不是故障
+- `permissionBubblesEnabled` must be `true` in Clawd's settings
+- `hideBubbles` must be `false`
+- Port 23333 must be listening (check #2 above)
+- If you run Claude Code with `--dangerously-skip-permissions`, or the action is
+  already allowlisted, no permission request is generated at all — that's not a bug
 </details>
 
 <details>
-<summary><b>通知气泡不弹，但权限卡片正常</b></summary>
+<summary><b>Notification bubbles don't appear, but permission cards do</b></summary>
 
-八成是把 `notificationBubbleAutoCloseSeconds` 设成了 `0`。
+You probably set `notificationBubbleAutoCloseSeconds` to `0`.
 
-**这两种气泡的 `0` 含义相反**：权限气泡的 `0` 是「永不自动关闭」，
-通知气泡的 `0` 是 `enabled: false`，也就是**功能直接关掉**。
-想让通知气泡久留，应该往大了设（上限 3600），不是设 0。
+**The two bubble kinds treat `0` in opposite ways.** For permission bubbles `0`
+means "never auto-close." For notification bubbles it evaluates to
+`enabled: false` — it **turns the feature off**. To make notification bubbles
+linger, set it high (3600 is the cap), not to zero.
 
-细节见 [docs/recommended-prefs.md](./docs/recommended-prefs.md)。
+Details in [docs/recommended-prefs.md](./docs/recommended-prefs.md).
 </details>
 
 <details>
-<summary><b>装完之后我原来的 hook 没了</b></summary>
+<summary><b>My existing hooks disappeared after installing</b></summary>
 
-不应该发生——合并逻辑逐事件保留非本仓库的条目，卸载往返测试也验证过
-能完整还原。真出现了，用安装时自动生成的备份恢复：
+This shouldn't happen — the merge preserves non-repo entries per event, and the
+uninstall round-trip is tested to restore the file exactly. If it does, recover
+from the backup the installer wrote:
 
 ```bash
-ls -t ~/.claude/settings.json.bak.* | head -1   # 找最近一份
+ls -t ~/.claude/settings.json.bak.* | head -1   # most recent
 ```
 
-并且请开个 issue 附上你原来的配置结构。
+Please also open an issue with the shape of your original config.
 </details>
 
 <details>
-<summary><b>我同时在用 Codex / 其他 agent</b></summary>
+<summary><b>I also run Codex or another agent</b></summary>
 
-不冲突。Clawd 按 agent 分别跟踪会话，本仓库只写 Claude Code 这一侧的
-`~/.claude/settings.json`，不碰 `~/.codex/` 之类的其他配置。
+No conflict. Clawd tracks sessions per agent, and this repo only writes the
+Claude Code side (`~/.claude/settings.json`) — it never touches `~/.codex/` or
+other agents' config.
 
-Claude Code 的**子 agent 也会要权限**——记得把 Clawd 设置里的
-`subagentPermissionsEnabled` 打开，否则子 agent 的请求不弹卡片，你会莫名其妙卡住。
+Claude Code **subagents request permissions too** — turn on
+`subagentPermissionsEnabled` in Clawd's settings, or subagent requests won't
+raise a card and you'll appear to hang for no reason.
 </details>
 
-## 兼容性
+## Compatibility
 
-| 项 | 要求 |
+| | Requirement |
 |---|---|
-| 系统 | macOS（通知脚本依赖 `osascript`；hook 配置本身跨平台，但未在 Windows/Linux 验证） |
-| Clawd on Desk | v0.10.0 起验证过，v1.0.0 为当前测试版本 |
-| Claude Code | 需支持 `PermissionRequest` 的 `http` 类型 hook |
-| node | 任意版本，仅用于执行 Clawd 自带的 hook 脚本 |
-| python3 | 系统自带即可（安装脚本与通知脚本使用） |
+| OS | macOS (the notification script uses `osascript`; the hook config itself is portable but untested on Windows/Linux) |
+| Clawd on Desk | Verified from v0.10.0; v1.0.0 is the current test version |
+| Claude Code | Needs `http`-type hook support for `PermissionRequest` |
+| node | Any version — only used to run Clawd's own bundled hook script |
+| python3 | System python is fine (used by the installer and notification script) |
 
-> Clawd 设置里的 `manageClaudeHooksAutomatically` 建议保持开启——
-> Clawd 升级后会自动修正 hook 里的 app 路径，省得每次升级都要重跑 `install.sh`。
+> Keep `manageClaudeHooksAutomatically` enabled in Clawd's settings — it repairs
+> the app paths inside your hooks after a Clawd upgrade, so you don't have to
+> re-run `install.sh` every time.
 
-## 里面有什么
+## What's inside
 
 ```
-├── install.sh                        # 自动探测路径 + 幂等合并配置
-├── uninstall.sh                      # 干净摘除，保留你其他的 hook
+├── install.sh                        # path detection + idempotent merge
+├── uninstall.sh                      # clean removal, keeps your other hooks
 ├── settings/
-│   └── clawd-hooks.template.json     # 15 个事件的配置模板（路径用占位符）
+│   └── clawd-hooks.template.json     # all 15 events, paths as placeholders
 ├── hooks/
-│   └── notify-input-needed.py        # macOS 横幅 + Glass 提示音
+│   └── notify-input-needed.py        # macOS banner + Glass sound
 └── docs/
-    ├── hook-events.md                # 15 个事件逐条解释，含为什么用绝对路径
-    └── recommended-prefs.md          # 实际在用的 Clawd 设置及理由
+    ├── hook-events.md                # every event explained, and why absolute paths
+    └── recommended-prefs.md          # the Clawd settings I actually run, with reasons
 ```
 
-## 关于那个通知脚本
+## About the notification script
 
-`hooks/notify-input-needed.py`，20 行：
+`hooks/notify-input-needed.py`, about 20 lines:
 
-Claude Code 触发 `Notification` 事件时，它从 stdin 读事件 JSON，取出 message，
-用 `osascript` 弹一条系统横幅并播放 Glass 提示音。
+On a Claude Code `Notification` event it reads the event JSON from stdin, pulls
+out the message, and fires a system banner with the Glass sound via `osascript`.
 
-它和 Clawd 的气泡是**互补**关系，不是替代：Clawd 的气泡在屏幕上、能交互；
-系统横幅会进通知中心，你在全屏应用里也能收到。两个都开，漏掉的概率最低。
+It **complements** Clawd's own bubble rather than replacing it: Clawd's bubble is
+on-screen and interactive; the system banner lands in Notification Center and
+reaches you inside fullscreen apps. Run both and you miss the least.
 
-之所以需要它，是因为 Clawd 的「被动通知气泡」只服务 Codex / Kimi 这类
-无决策通道的 agent（见 `passive-notify-entry.js`）。Claude Code 走的是带决策通道的
-路径，屏幕上只会出现权限卡片和追问卡片两种——纯状态变化不会有气泡。
-这个脚本补的就是那个缺口。
+The reason it's needed: Clawd's "passive notification" bubbles serve only agents
+without a decision channel, like Codex and Kimi (see `passive-notify-entry.js`).
+Claude Code goes through the decision-carrying path, so the only cards you ever
+see are permission cards and follow-up cards — pure state changes produce no
+bubble at all. This script fills that gap.
 
-`INSTALL_NOTIFY=0 bash install.sh` 可以跳过它。
+Skip it with `INSTALL_NOTIFY=0 bash install.sh`.
 
-## 卸载
+## Uninstall
 
 ```bash
 bash uninstall.sh
 ```
 
-只摘 hook 配置，不动 Clawd 这个 app 本身。执行前也会自动备份。
-往返测试验证过：卸载后 `settings.json` 与安装前**逐字节一致**。
+Removes the hook config only; leaves the Clawd app untouched. Backs up first.
+Round-trip tested: after uninstalling, `settings.json` is **byte-for-byte
+identical** to what it was before installing.
 
-## 环境变量
+## Environment variables
 
-| 变量 | 默认 | 用途 |
+| Variable | Default | Purpose |
 |---|---|---|
-| `CLAWD_APP` | 自动探测 | Clawd.app 路径 |
-| `NODE_BIN` | 自动探测 | node 可执行文件路径 |
-| `CLAUDE_SETTINGS` | `~/.claude/settings.json` | 换个 settings 文件（便于试） |
-| `CLAUDE_HOOK_DIR` | `~/.claude/hooks` | 换个 hook 目录 |
-| `INSTALL_NOTIFY` | `1` | 设 `0` 跳过通知脚本 |
+| `CLAWD_APP` | auto-detected | Path to Clawd.app |
+| `NODE_BIN` | auto-detected | Path to the node binary |
+| `CLAUDE_SETTINGS` | `~/.claude/settings.json` | Point at a different settings file |
+| `CLAUDE_HOOK_DIR` | `~/.claude/hooks` | Point at a different hooks dir |
+| `INSTALL_NOTIFY` | `1` | Set `0` to skip the notification script |
 
-## 上游项目
+## Upstream
 
-宠物本体是 **[Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk)**
-（[@rullerzhou-afk](https://github.com/rullerzhou-afk)，AGPL-3.0-only）。
-用这套配置前需要先装它。觉得好用的话，去给上游点个 star。
+The pet itself is **[Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk)**
+([@rullerzhou-afk](https://github.com/rullerzhou-afk), AGPL-3.0-only). You need it
+installed before this config does anything. If you like it, go star the upstream repo.
 
-本仓库不包含也不重新分发 Clawd 的任何代码或二进制，只有配置模板、安装脚本和文档。
+This repository bundles and redistributes none of Clawd's code or binaries — only
+config templates, install scripts, and docs.
 
-## 许可
+## License
 
-MIT。详见 [LICENSE](./LICENSE) 与 [NOTICE.md](./NOTICE.md)。
+MIT. See [LICENSE](./LICENSE) and [NOTICE.md](./NOTICE.md).
