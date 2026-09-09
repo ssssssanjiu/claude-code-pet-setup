@@ -1,4 +1,4 @@
-# claude-code-pet-setup
+# clawd-conduit
 
 > 让桌面宠物真正「懂」你的 Claude Code 会话——15 个 hook 事件的完整接线方案。
 
@@ -52,8 +52,8 @@ Claude Code 干长任务时，你会离开终端——去看文档、回消息�
 #    https://github.com/rullerzhou-afk/clawd-on-desk/releases
 
 # 2. 套上这份配置
-git clone https://github.com/ssssssanjiu/claude-code-pet-setup.git
-cd claude-code-pet-setup
+git clone https://github.com/ssssssanjiu/clawd-conduit.git
+cd clawd-conduit
 bash install.sh
 ```
 

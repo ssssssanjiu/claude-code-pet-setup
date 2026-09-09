@@ -1,4 +1,4 @@
-# claude-code-pet-setup
+# clawd-conduit
 
 > Wire a desktop pet into what your Claude Code session is *actually* doing — all 15 hook events.
 
@@ -44,11 +44,11 @@ This config cuts those three minutes to zero:
   which step blew up
 
 <p align="center">
-  <img src="assets/elicitation-with-pet.png" alt="Clawd's follow-up question card above the pet" width="340">
+  <img src="assets/elicitation-with-pet-en.png" alt="Clawd's follow-up question card above the pet" width="340">
 </p>
 <p align="center">
   <sub>When Claude Code asks you to pick between options, the card lands on the desktop and the
-  pet switches to its lightbulb "needs input" pose. (Card language follows Clawd's own setting.)</sub>
+  pet switches to its lightbulb "needs input" pose</sub>
 </p>
 
 ## Quick start
@@ -58,8 +58,8 @@ This config cuts those three minutes to zero:
 #    https://github.com/rullerzhou-afk/clawd-on-desk/releases
 
 # 2. Apply this config
-git clone https://github.com/ssssssanjiu/claude-code-pet-setup.git
-cd claude-code-pet-setup
+git clone https://github.com/ssssssanjiu/clawd-conduit.git
+cd clawd-conduit
 bash install.sh
 ```
 
