@@ -5,10 +5,12 @@
 [English](./README.en.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/elicitation-with-pet.png" alt="Clawd 的追问卡片与桌宠，桌宠切换为等待输入姿态" width="380">
+  <img src="assets/elicitation-with-pet.png" alt="中文追问卡片与桌宠" width="330">
+  <img src="assets/elicitation-with-pet-en.png" alt="英文追问卡片与桌宠" width="330">
 </p>
 <p align="center">
-  <sub>Claude Code 让你在几个方案里挑一个时，卡片直接弹在桌面上——桌宠同时切换成举灯泡的「等待输入」姿态</sub>
+  <sub>Claude Code 让你在几个方案里挑一个时，卡片直接弹在桌面上——桌宠同时切换成举灯泡的「等待输入」姿态。<br>
+  界面语言跟随 Clawd 设置，中英文皆可</sub>
 </p>
 
 ## 这是什么

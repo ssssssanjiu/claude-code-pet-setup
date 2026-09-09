@@ -5,11 +5,13 @@
 [中文](./README.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/elicitation-with-pet-en.png" alt="Clawd's follow-up question card above the pet" width="380">
+  <img src="assets/elicitation-with-pet-en.png" alt="Follow-up question card above the pet, in English" width="330">
+  <img src="assets/elicitation-with-pet.png" alt="Follow-up question card above the pet, in Chinese" width="330">
 </p>
 <p align="center">
   <sub>When Claude Code asks you to pick between options, the card lands on the desktop — and the
-  pet switches to its lightbulb "needs input" pose</sub>
+  pet switches to its lightbulb "needs input" pose.<br>
+  The card follows Clawd's own language setting; English and Chinese both shown</sub>
 </p>
 
 ## What this is

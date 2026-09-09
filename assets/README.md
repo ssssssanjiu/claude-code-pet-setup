@@ -2,8 +2,8 @@
 
 | 文件 | 用途 |
 |---|---|
-| `elicitation-with-pet.png` | 中文 README 首图：追问卡片 + 桌宠（等待输入姿态） |
-| `elicitation-with-pet-en.png` | 英文 README 首图，同上的英文版 |
+| `elicitation-with-pet.png` | 追问卡片 + 桌宠（等待输入姿态），中文版 |
+| `elicitation-with-pet-en.png` | 同上的英文版。两张并排构成中英两版 README 的首图 |
 | `permission-bubble.png` | 权限卡片，含破坏性操作警告 |
 | `permission-bubble-en.png` | 英文 README 正文图，同上 |
 
