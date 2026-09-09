@@ -5,10 +5,10 @@
 [English](./README.en.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/permission-bubble.png" alt="Clawd 弹出的权限确认卡片，带破坏性操作警告" width="340">
+  <img src="assets/elicitation-with-pet.png" alt="Clawd 的追问卡片与桌宠，桌宠切换为等待输入姿态" width="380">
 </p>
 <p align="center">
-  <sub>Claude Code 想执行 <code>rm -rf</code> 时弹出的卡片。<code>Cmd+Shift+Y</code> 允许，<code>Cmd+Shift+N</code> 拒绝——<b>不用切回终端</b></sub>
+  <sub>Claude Code 让你在几个方案里挑一个时，卡片直接弹在桌面上——桌宠同时切换成举灯泡的「等待输入」姿态</sub>
 </p>
 
 ## 这是什么
@@ -37,6 +37,13 @@ Claude Code 干长任务时，你会离开终端——去看文档、回消息�
   你以为拒绝了，其实只是回落到了终端提示
 - 任务完成闪 Dock + 提示音，人在别的窗口也接得住
 - 工具失败当场变脸，不用回头翻 scrollback 找哪一步炸了
+
+<p align="center">
+  <img src="assets/permission-bubble.png" alt="带破坏性操作警告的权限卡片" width="300">
+</p>
+<p align="center">
+  <sub>命令里有 <code>rm -rf</code> 时，卡片会自己亮出 <b>Destructive action</b> 警告条</sub>
+</p>
 
 ## 快速开始
 

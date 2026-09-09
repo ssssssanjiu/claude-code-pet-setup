@@ -43,6 +43,14 @@ This config cuts those three minutes to zero:
 - Tool failures change the pet's state immediately — no scrolling back to find
   which step blew up
 
+<p align="center">
+  <img src="assets/elicitation-with-pet.png" alt="Clawd's follow-up question card above the pet" width="340">
+</p>
+<p align="center">
+  <sub>When Claude Code asks you to pick between options, the card lands on the desktop and the
+  pet switches to its lightbulb "needs input" pose. (Card language follows Clawd's own setting.)</sub>
+</p>
+
 ## Quick start
 
 ```bash
