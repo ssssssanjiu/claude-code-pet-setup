@@ -5,7 +5,10 @@
 [English](./README.en.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="宠物在敲键盘，上方是终端窗口" width="360">
+  <img src="assets/permission-bubble.png" alt="Clawd 弹出的权限确认卡片，带破坏性操作警告" width="340">
+</p>
+<p align="center">
+  <sub>Claude Code 想执行 <code>rm -rf</code> 时弹出的卡片。<code>Cmd+Shift+Y</code> 允许，<code>Cmd+Shift+N</code> 拒绝——<b>不用切回终端</b></sub>
 </p>
 
 ## 这是什么

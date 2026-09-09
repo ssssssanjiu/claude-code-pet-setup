@@ -5,7 +5,10 @@
 [中文](./README.md) · macOS · MIT
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="The pet typing at a keyboard below a terminal window" width="360">
+  <img src="assets/permission-bubble-en.png" alt="Clawd's permission card with a destructive-action warning" width="340">
+</p>
+<p align="center">
+  <sub>The card that pops up when Claude Code wants to run <code>rm -rf</code>. <code>Cmd+Shift+Y</code> to allow, <code>Cmd+Shift+N</code> to deny — <b>without switching windows</b></sub>
 </p>
 
 ## What this is
